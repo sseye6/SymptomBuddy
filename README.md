@@ -13,7 +13,7 @@ A symptom tracker web app made by Sokhna Seye
 8. Add treatment tracking notifs
 10. Add notes to treatment tracking
 11. Add results tracking (lab results, diagnoses, etc.)
-12. Add ability to adjust dashboard based on what user wants to track
+12. Add ability to adjust dashboard based on what user wants to track by adding, deleting and drag-and-drop rearranging sections
 13. Add journal option
 14. Add appointment tracking
 15. Add appointment reminders
