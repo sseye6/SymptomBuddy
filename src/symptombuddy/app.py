@@ -1,7 +1,7 @@
 # import necessary modules from PyQt5
 from PyQt5.QtCore import Qt
 from PyQt5.QtWidgets import QApplication, QWidget, QLabel, QPushButton, QVBoxLayout, QHBoxLayout
-# from ui.dashboard import Dashboard
+from ui.dashboard import Dashboard
 import datetime
 
 class SymptomBuddyApp(QWidget):
@@ -44,11 +44,11 @@ class SymptomBuddyApp(QWidget):
         self.date_time_label = QLabel(datetime.datetime.now().strftime("%m-%d-%Y %H:%M:%S"))
         self.date_time_label.setAlignment(Qt.AlignCenter)
 
-        # self.dashboard = Dashboard()
+        self.dashboard = Dashboard()
 
         self.content_layout.addWidget(self.content_label)
         self.content_layout.addWidget(self.date_time_label)
-        # self.content_layout.addWidget(self.dashboard)
+        self.content_layout.addWidget(self.dashboard)
 
         # Add panels to main layout
         main_layout.addLayout(menu_layout)
