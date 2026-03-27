@@ -4,9 +4,11 @@ from PyQt5.QtWidgets import QWidget, QLabel, QPushButton, QVBoxLayout, QHBoxLayo
 from .widgets import NotesWidget, TrackerWidget, TreatmentWidget, MoodWidget, SymptomsWidget
 
 class Dashboard(QWidget):
-    def __init__(self):
+    def __init__(self, db_manager):
         super().__init__()
+        self.db_manager = db_manager
         self.initUI()
+        
 
     def initUI(self):
         # Set up the dashboard UI
@@ -36,7 +38,7 @@ class Dashboard(QWidget):
         exercise_tracker = TrackerWidget('Exercise', 'minutes')
         frame_layout.addWidget(exercise_tracker, 3, 0)
 
-        notes_widget = NotesWidget()
+        notes_widget = NotesWidget(self.db_manager)
         frame_layout.addWidget(notes_widget, 1, 1)
 
         sample_treatment = {

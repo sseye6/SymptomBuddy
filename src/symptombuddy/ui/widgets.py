@@ -1,11 +1,14 @@
 # Import necessary pyqt5 modules
 from PyQt5.QtCore import Qt
 from PyQt5.QtWidgets import QWidget, QLabel, QPushButton, QVBoxLayout, QHBoxLayout, QGridLayout, QFrame, QLineEdit, QTextEdit, QComboBox, QSlider, QCheckBox, QScrollArea
+import datetime
 
 class NotesWidget(QWidget):
-    def __init__(self):
+    def __init__(self, db_manager):
         super().__init__()
-        self.initUI()
+        self.db_manager = db_manager
+        db_manager.addWidget("Notes")
+        self.initUI()    
 
     def initUI(self):
         # Set up the notes widget UI
@@ -22,10 +25,22 @@ class NotesWidget(QWidget):
         notes_text_edit = QTextEdit()
         frame_layout.addWidget(notes_text_edit)
 
+        save_button = QPushButton('Save')
+        save_button.clicked.connect(self.save_note)
+        frame_layout.addWidget(save_button)
+
         notes_frame.setLayout(frame_layout)
         main_layout = QVBoxLayout()
         main_layout.addWidget(notes_frame)
         self.setLayout(main_layout)
+
+
+    def save_note(self):
+        # save notes to database for lookup later
+        note_contents = str(self.findChild(QTextEdit).toPlainText())
+        self.db_manager.addNote("Notes", datetime.datetime.now().strftime("%Y-%m-%d"), datetime.datetime.now().strftime("%H:%M"), note_contents)
+        self.findChild(QTextEdit).setText("")
+        
 
 class TrackerWidget(QWidget):
     def __init__(self, tracker_type, units):

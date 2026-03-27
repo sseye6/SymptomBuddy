@@ -1,12 +1,17 @@
 # import necessary modules from PyQt5
 from PyQt5.QtCore import Qt
 from PyQt5.QtWidgets import QApplication, QWidget, QLabel, QPushButton, QVBoxLayout, QHBoxLayout
+from PyQt5.QtSql import QSqlDatabase, QSqlQuery
 from ui.dashboard import Dashboard
+from db import DatabaseManager
 import datetime
 
 class SymptomBuddyApp(QWidget):
     def __init__(self):
         super().__init__()
+        self.connection_name = "user_history_con"
+        self.createDatabaseConnection(self.connection_name)
+        self.database_manager = DatabaseManager(self.connection_name)
         self.initUI()
 
     def initUI(self):
@@ -41,10 +46,10 @@ class SymptomBuddyApp(QWidget):
         self.content_label = QLabel('Welcome to Symptom Buddy!')
         self.content_label.setAlignment(Qt.AlignCenter)
 
-        self.date_time_label = QLabel(datetime.datetime.now().strftime("%m-%d-%Y %H:%M:%S"))
+        self.date_time_label = QLabel(datetime.datetime.now().strftime("%m/%d/%Y"))
         self.date_time_label.setAlignment(Qt.AlignCenter)
 
-        self.dashboard = Dashboard()
+        self.dashboard = Dashboard(self.database_manager)
 
         self.content_layout.addWidget(self.content_label)
         self.content_layout.addWidget(self.date_time_label)
@@ -55,6 +60,10 @@ class SymptomBuddyApp(QWidget):
         main_layout.addLayout(self.content_layout)
         self.setLayout(main_layout)
 
+    def createDatabaseConnection(self, connection_name):
+        con = QSqlDatabase.addDatabase("QSQLITE", connection_name)
+        con.setDatabaseName("data/history.sqlite")
+        return con
 
 if __name__ == '__main__':
     app = QApplication([])
