@@ -9,6 +9,7 @@ class DatabaseManager():
         self.connection_name = connection_name
         self.addWidgetsTable()
         self.addNotesTable()
+        self.addTrackerTable()
 
     def addWidgetsTable(self):
         # create a table to keep track of active widgets
@@ -35,6 +36,15 @@ class DatabaseManager():
             VALUES ('{widget_name}');
             """
         )
+        # query = QSqlQuery(db)
+        # query.exec(
+        #     f"""
+        #     SELECT id, widget_name FROM widgets;
+        #     """
+        # )
+        # id, name= range(2)
+        # while query.next():
+        #     print(query.value(id), query.value(name))
         db.close()
 
     def findWidgetId(self, widget_name):
@@ -107,6 +117,102 @@ class DatabaseManager():
         time, note = range(2)
         notes = []
         while query.next:
-            notes.append((query.value(time), query.value(note)))
+            notes.append({'time': query.value(time), 'note': query.value(note)})
         db.close()
         return notes
+    
+    def addTrackerTable(self):
+        # create a table to keep track of various tracked
+        # values from tracker widget
+        db = QSqlDatabase.database(self.connection_name)
+        query = QSqlQuery(db)
+        if not query.exec(
+            f"""
+            CREATE TABLE IF NOT EXISTS tracker_logs
+            (id INTEGER PRIMARY KEY AUTOINCREMENT UNIQUE NOT NULL, 
+            widget_id INTEGER,
+            date TEXT NOT NULL,
+            time TEXT,
+            tracker_type TEXT UNIQUE NOT NULL,
+            value INTEGER, 
+            units TEXT); 
+            """
+        ):
+            print("Error: Unable to initiate trackers table")
+        db.close()
+
+    def addTrackerEntry(self, widget_name, date, time, tracker_type, value, units):
+        # print(widget_name, date, time, tracker_type, value, units)
+        widget_id = self.findWidgetId(widget_name)
+        db = QSqlDatabase.database(self.connection_name)
+        query = QSqlQuery(db)
+        if not query.exec(
+            f"""
+            INSERT INTO tracker_logs (widget_id, date, time, tracker_type, value, units)
+            VALUES ({widget_id}, '{date}', '{time}', '{tracker_type}', {value}, '{units}');
+            """
+        ):
+            print('Error: cannot add tracker entry', db.lastError().databaseText())
+        
+        db.close()
+
+    def getTrackerByType(self, tracker_type, date = None):
+        db = QSqlDatabase.database(self.connection_name)
+        query = QSqlQuery(db)
+        if date:
+            query.exec(
+                f"""
+                SELECT date, time, value, units FROM tracker_logs WHERE tracker_type='{tracker_type}' 
+                AND date='{date}' ORDER BY date, time;
+                """
+            )
+        else:
+            query.exec(
+                f"""
+                SELECT date, time, value, units FROM tracker_logs WHERE tracker_type='{tracker_type}' 
+                ORDER BY date, time;
+                """
+            )
+
+        d, t, v, u = range(4)
+        values = []
+        while query.next():
+            values.append({'date': query.value(d), 'time': query.value(t), 'value': query.value(v),
+                            'units':query.value(u)})
+
+        db.close()
+        return values
+    
+    def updateTrackerValue(self, widget_name, date, time, value):
+        widget_id = self.findWidgetId(widget_name)
+        db = QSqlDatabase.database(self.connection_name)
+        query = QSqlQuery(db)
+        if not query.exec(
+            f"""
+            UPDATE tracker_logs
+            SET time='{time}', value ='{value}'
+            WHERE widget_id='{widget_id}' AND date='{date}';
+            """
+        ):
+            print("Error: can't update tracker vlaue")
+
+        db.close()
+
+    def initTrackerValue(self, widget_name, date, tracker_type, units):
+        widget_id = self.findWidgetId(widget_name)
+        db = QSqlDatabase.database(self.connection_name)
+        query = QSqlQuery(db)
+        if not query.exec(
+            f"""
+            SELECT value FROM tracker_logs WHERE widget_id={widget_id} AND date='{date}'
+            """
+        ):
+            print("Error: can't find tracker value")
+        value = 0
+        if query.next():
+            value = query.value(0)
+            db.close()
+        else:
+            db.close()
+            self.addTrackerEntry(widget_name, date, "00:00", tracker_type, 0, units)
+        return value

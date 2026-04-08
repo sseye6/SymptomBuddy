@@ -7,7 +7,8 @@ class NotesWidget(QWidget):
     def __init__(self, db_manager):
         super().__init__()
         self.db_manager = db_manager
-        db_manager.addWidget("Notes")
+        self.widget_name = "Notes"
+        db_manager.addWidget(self.widget_name)
         self.initUI()    
 
     def initUI(self):
@@ -38,16 +39,24 @@ class NotesWidget(QWidget):
     def save_note(self):
         # save notes to database for lookup later
         note_contents = str(self.findChild(QTextEdit).toPlainText())
-        self.db_manager.addNote("Notes", datetime.datetime.now().strftime("%Y-%m-%d"), datetime.datetime.now().strftime("%H:%M"), note_contents)
+        self.db_manager.addNote("Notes", datetime.datetime.now().strftime("%Y-%m-%d"), 
+                                datetime.datetime.now().strftime("%H:%M"), note_contents)
         self.findChild(QTextEdit).setText("")
         
 
 class TrackerWidget(QWidget):
-    def __init__(self, tracker_type, units):
+    def __init__(self, tracker_type, units, db_manager):
         super().__init__()
         self.tracker_type = tracker_type
         self.units = units
+        self.db_manager = db_manager
+        self.widget_name = f"{tracker_type} Tracker"
+        self.db_manager.addWidget(self.widget_name)
+        
         self.initUI()
+        self.update_value(self.db_manager.initTrackerValue(self.widget_name, 
+                                         datetime.datetime.now().strftime("%Y-%m-%d"), 
+                                         self.tracker_type, self.units))
 
     def initUI(self):
         # Set up the tracker widget UI
@@ -82,9 +91,14 @@ class TrackerWidget(QWidget):
         main_layout.addWidget(tracker_frame)
         self.setLayout(main_layout)
 
+    def update_db(self):
+        self.db_manager.updateTrackerValue(self.widget_name, datetime.datetime.now().strftime("%Y-%m-%d"), 
+                                           datetime.datetime.now().strftime("%H:%M"), self.get_value())
+
     def update_value(self, new_value):
         # Update the value in the input field
         self.findChild(QLineEdit).setText(str(new_value))
+        self.update_db()
 
     def get_value(self):
         # Get the current value from the input field

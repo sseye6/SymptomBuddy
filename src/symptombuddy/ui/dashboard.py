@@ -29,13 +29,13 @@ class Dashboard(QWidget):
         symptom_tracker = SymptomsWidget(False, sample_symptom)
         frame_layout.addWidget(symptom_tracker, 0, 0)
 
-        water_tracker = TrackerWidget('Water Intake', 'glasses')
+        water_tracker = TrackerWidget('Water Intake', 'glasses', self.db_manager)
         frame_layout.addWidget(water_tracker, 1, 0)
 
-        sleep_tracker = TrackerWidget('Sleep', 'hours')
+        sleep_tracker = TrackerWidget('Sleep', 'hours', self.db_manager)
         frame_layout.addWidget(sleep_tracker, 2, 0)
 
-        exercise_tracker = TrackerWidget('Exercise', 'minutes')
+        exercise_tracker = TrackerWidget('Exercise', 'minutes', self.db_manager)
         frame_layout.addWidget(exercise_tracker, 3, 0)
 
         notes_widget = NotesWidget(self.db_manager)
