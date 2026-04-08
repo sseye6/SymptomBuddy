@@ -48,7 +48,7 @@ class Dashboard(QWidget):
         treatment_widget = TreatmentWidget(sample_treatment)
         frame_layout.addWidget(treatment_widget, 2, 1)
 
-        mood_widget = MoodWidget()
+        mood_widget = MoodWidget(self.db_manager)
         frame_layout.addWidget(mood_widget, 3, 1)
 
         main_layout.addLayout(frame_layout)

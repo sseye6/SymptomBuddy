@@ -168,9 +168,14 @@ class TreatmentWidget(QWidget):
         self.setLayout(main_layout)
 
 class MoodWidget(QWidget):
-    def __init__(self):
+    def __init__(self, db_manager):
         super().__init__()
+        self.db_manager = db_manager
+        self.widget_name = "Mood"
+        self.db_manager.addWidget(self.widget_name)
         self.initUI()
+        self.set_mood_value(self.db_manager.initMoodValue(self.widget_name, 
+                                                          datetime.datetime.now().strftime("%Y-%m-%d")))
 
     def initUI(self):
         # Set up the mood widget UI
@@ -199,6 +204,7 @@ class MoodWidget(QWidget):
         frame_layout.addWidget(self.mood_desc_label)
 
         submit_mood_button = QPushButton('Submit Mood')
+        submit_mood_button.clicked.connect(self.save_mood)
         frame_layout.addWidget(submit_mood_button)
 
         mood_frame.setLayout(frame_layout)
@@ -220,6 +226,14 @@ class MoodWidget(QWidget):
     def get_mood_value(self):
         # Get the current mood value from the slider
         return self.findChild(QSlider).value()
+    
+    def set_mood_value(self, value):
+        self.findChild(QSlider).setValue(value)
+        self.update_mood_description()
+
+    def save_mood(self):
+        self.db_manager.addMoodEntry(self.widget_name, datetime.datetime.now().strftime("%Y-%m-%d"), 
+                                     datetime.datetime.now().strftime("%H:%M"), self.get_mood_value())
 
 class SymptomsWidget(QWidget):
     def __init__(self, checkin_complete = False, trends_data = {}):

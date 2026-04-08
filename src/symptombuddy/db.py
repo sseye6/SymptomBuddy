@@ -10,6 +10,7 @@ class DatabaseManager():
         self.addWidgetsTable()
         self.addNotesTable()
         self.addTrackerTable()
+        self.addMoodTable()
 
     def addWidgetsTable(self):
         # create a table to keep track of active widgets
@@ -204,7 +205,7 @@ class DatabaseManager():
         query = QSqlQuery(db)
         if not query.exec(
             f"""
-            SELECT value FROM tracker_logs WHERE widget_id={widget_id} AND date='{date}'
+            SELECT value FROM tracker_logs WHERE widget_id={widget_id} AND date='{date}';
             """
         ):
             print("Error: can't find tracker value")
@@ -215,4 +216,51 @@ class DatabaseManager():
         else:
             db.close()
             self.addTrackerEntry(widget_name, date, "00:00", tracker_type, 0, units)
+        return value
+    
+    def addMoodTable(self):
+        # create a table to keep track of mood
+        # values from mood widget
+        db = QSqlDatabase.database(self.connection_name)
+        query = QSqlQuery(db)
+        if not query.exec(
+            f"""
+            CREATE TABLE IF NOT EXISTS mood_logs
+            (id INTEGER PRIMARY KEY AUTOINCREMENT UNIQUE NOT NULL, 
+            widget_id INTEGER,
+            date TEXT NOT NULL,
+            time TEXT,
+            value INTEGER); 
+            """
+        ):
+            print("Error: Unable to initiate mood table")
+        db.close()
+
+    def addMoodEntry(self, widget_name, date, time, value):
+        widget_id = self.findWidgetId(widget_name)
+        db = QSqlDatabase.database(self.connection_name)
+        query = QSqlQuery(db)
+        if not query.exec(
+            f"""
+            INSERT INTO mood_logs (widget_id, date, time, value)
+            VALUES ({widget_id}, '{date}', '{time}', {value});
+            """
+        ):
+            print("Error: Unable to initiate trackers table")
+        db.close()
+
+    def initMoodValue(self, widget_name, date):
+        widget_id = self.findWidgetId(widget_name)
+        db = QSqlDatabase.database(self.connection_name)
+        query = QSqlQuery(db)
+        if not query.exec(
+            f"""
+            SELECT value FROM mood_logs WHERE date='{date}' ORDER BY time DESC;
+            """
+        ):
+            print("Error: Unable to initiate trackers table")
+        value = 3
+        if query.next():
+            value = query.value(0)
+        db.close()
         return value
