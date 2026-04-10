@@ -386,7 +386,7 @@ class DatabaseManager():
         query.finish()
         db.close()
 
-    def getTreatmentsbyDate(self, date):
+    def getTreatmentsByDate(self, date):
         db = QSqlDatabase.database(self.connection_name)
         query = QSqlQuery(db)
         if not query.exec(

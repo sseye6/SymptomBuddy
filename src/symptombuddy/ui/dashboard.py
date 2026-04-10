@@ -41,11 +41,11 @@ class Dashboard(QWidget):
         notes_widget = NotesWidget(self.db_manager)
         frame_layout.addWidget(notes_widget, 1, 1)
 
-        sample_treatment = {
-            "Medication A": {"time": "08:00", "dosage": 2, "units": "pills"},
-            "Medication B": {"time": "12:00", "dosage": 1, "units": "tablet"}
-        }
-        treatment_widget = TreatmentWidget(sample_treatment)
+        # sample_treatment = {
+        #     "Medication A": {"time": "08:00", "dosage": 2, "units": "pills"},
+        #     "Medication B": {"time": "12:00", "dosage": 1, "units": "tablet"}
+        # }
+        treatment_widget = TreatmentWidget(self.db_manager)
         frame_layout.addWidget(treatment_widget, 2, 1)
 
         mood_widget = MoodWidget(self.db_manager)
