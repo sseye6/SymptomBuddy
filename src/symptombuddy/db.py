@@ -26,6 +26,7 @@ class DatabaseManager():
             """
         ):
             print("Error: AddWidgetTable", db.lastError().databaseText())
+        query.finish()
         db.close()
 
 
@@ -39,15 +40,7 @@ class DatabaseManager():
             VALUES ('{widget_name}');
             """
         )
-        # query = QSqlQuery(db)
-        # query.exec(
-        #     f"""
-        #     SELECT id, widget_name FROM widgets;
-        #     """
-        # )
-        # id, name= range(2)
-        # while query.next():
-        #     print(query.value(id), query.value(name))
+        query.finish()
         db.close()
 
     def findWidgetId(self, widget_name):
@@ -65,6 +58,7 @@ class DatabaseManager():
             db.close()
             return -1
         id = query.value(0)
+        query.finish()
         db.close()
         return id
 
@@ -84,7 +78,7 @@ class DatabaseManager():
             """
         ):
             print("Error: add Notes Table")
-        print(db.tables())
+        query.finish()
         db.close()
 
     def addNote(self, widget_name, date, time, note):
@@ -103,6 +97,7 @@ class DatabaseManager():
         note_id, date, time, note = range(4)
         while query.next():
             print(query.value(note_id), query.value(date), query.value(time), query.value(note))
+        query.finish()
         db.close()
 
     def getNotesByDate(self, widget_name, date=None):
@@ -121,6 +116,7 @@ class DatabaseManager():
         notes = []
         while query.next:
             notes.append({'time': query.value(time), 'note': query.value(note)})
+        query.finish()
         db.close()
         return notes
     
@@ -142,6 +138,7 @@ class DatabaseManager():
             """
         ):
             print("Error: Unable to initiate trackers table")
+        query.finish()
         db.close()
 
     def addTrackerEntry(self, widget_name, date, time, tracker_type, value, units):
@@ -156,7 +153,7 @@ class DatabaseManager():
             """
         ):
             print('Error: cannot add tracker entry', db.lastError().databaseText())
-        
+        query.finish()
         db.close()
 
     def getTrackerByType(self, tracker_type, date = None):
@@ -183,6 +180,7 @@ class DatabaseManager():
             values.append({'date': query.value(d), 'time': query.value(t), 'value': query.value(v),
                             'units':query.value(u)})
 
+        query.finish()
         db.close()
         return values
     
@@ -198,7 +196,7 @@ class DatabaseManager():
             """
         ):
             print("Error: can't update tracker vlaue")
-
+        query.finish()
         db.close()
 
     def initTrackerValue(self, widget_name, date, tracker_type, units):
@@ -214,8 +212,10 @@ class DatabaseManager():
         value = 0
         if query.next():
             value = query.value(0)
+            query.finish()
             db.close()
         else:
+            query.finish()
             db.close()
             self.addTrackerEntry(widget_name, date, "00:00", tracker_type, 0, units)
         return value
@@ -236,6 +236,7 @@ class DatabaseManager():
             """
         ):
             print("Error: Unable to initiate mood table")
+        query.finish()
         db.close()
 
     def addMoodEntry(self, widget_name, date, time, value):
@@ -249,6 +250,7 @@ class DatabaseManager():
             """
         ):
             print("Error: Unable to initiate trackers table")
+        query.finish()
         db.close()
 
     def initMoodValue(self, widget_name, date):
@@ -264,6 +266,7 @@ class DatabaseManager():
         value = 3
         if query.next():
             value = query.value(0)
+        query.finish()
         db.close()
         return value
     
@@ -286,6 +289,7 @@ class DatabaseManager():
             """
         ):
             print("Error: Unable to initiate treatments table")
+        query.finish()
         db.close()
 
     def addTreatmentLogTable(self):
@@ -295,13 +299,14 @@ class DatabaseManager():
             f"""
             CREATE TABLE IF NOT EXISTS treatment_logs
             (id INTEGER PRIMARY KEY AUTOINCREMENT UNIQUE NOT NULL, 
-            FOREIGN KEY(treatment_id) REFERENCES treatments(id),
+            treatment_id INTEGER,
             date TEXT,
             time TEXT,
             complete INTEGER); 
             """
         ):
-            print("Error: Unable to initiate treatments table")
+            print("Error: Unable to initiate treatment logs table")
+        query.finish()
         db.close()
 
     def findTreatmentIdByName(self, treatment_name):
@@ -316,6 +321,7 @@ class DatabaseManager():
         val = -1
         if query.next():
             val = query.value(0)
+        query.finish()
         db.close()
         return val
     
@@ -347,7 +353,7 @@ class DatabaseManager():
                 """
             ):
                 print("Error: Unable to initiate trackers table")
-            
+        query.finish()
         db.close()
 
 
@@ -362,6 +368,8 @@ class DatabaseManager():
             """
         ):
             print("Error: Unable to initiate trackers table")
+        query.finish()
+        db.close()
 
     def updateTreatmentEntry(self, treatment_name, date, time, complete=1):
         treatment_id = self.findTreatmentIdByName(treatment_name)
@@ -375,6 +383,7 @@ class DatabaseManager():
             """
         ):
             print("Error: can't update treatment value")
+        query.finish()
         db.close()
 
     def getTreatmentsbyDate(self, date):
@@ -396,5 +405,6 @@ class DatabaseManager():
             treatments[query.value(name)] = {'time': query.value(time), 'dosage':query.value(dosage), 
                                           'units': query.value(units), 'start_date': query.value(start_date), 
                                           'end_date': query.value(end_date), 'active': query.value(active)}
+        query.finish()
         db.close()
         return treatments
