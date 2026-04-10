@@ -27,7 +27,7 @@ class NotesWidget(QWidget):
         frame_layout.addWidget(notes_text_edit)
 
         save_button = QPushButton('Save')
-        save_button.clicked.connect(self.save_note)
+        save_button.clicked.connect(self.saveNote)
         frame_layout.addWidget(save_button)
 
         notes_frame.setLayout(frame_layout)
@@ -36,7 +36,7 @@ class NotesWidget(QWidget):
         self.setLayout(main_layout)
 
 
-    def save_note(self):
+    def saveNote(self):
         # save notes to database for lookup later
         note_contents = str(self.findChild(QTextEdit).toPlainText())
         self.db_manager.addNote("Notes", datetime.datetime.now().strftime("%Y-%m-%d"), 
@@ -54,7 +54,7 @@ class TrackerWidget(QWidget):
         self.db_manager.addWidget(self.widget_name)
         
         self.initUI()
-        self.update_value(self.db_manager.initTrackerValue(self.widget_name, 
+        self.updateValue(self.db_manager.initTrackerValue(self.widget_name, 
                                          datetime.datetime.now().strftime("%Y-%m-%d"), 
                                          self.tracker_type, self.units))
 
@@ -71,12 +71,12 @@ class TrackerWidget(QWidget):
         tracker_label.setAlignment(Qt.AlignCenter)
         adjust_layout = QHBoxLayout()
         decrease_button = QPushButton('-')
-        decrease_button.clicked.connect(self.decrease_value)
+        decrease_button.clicked.connect(self.decreaseValue)
         input_field = QLineEdit()
         input_field.setText('0')
-        input_field.textChanged.connect(self.validate_input)
+        input_field.textChanged.connect(self.validateInput)
         increase_button = QPushButton('+')
-        increase_button.clicked.connect(self.increase_value)
+        increase_button.clicked.connect(self.increaseValue)
         adjust_layout.addWidget(decrease_button)
         adjust_layout.addWidget(input_field)
         adjust_layout.addWidget(increase_button)
@@ -91,46 +91,48 @@ class TrackerWidget(QWidget):
         main_layout.addWidget(tracker_frame)
         self.setLayout(main_layout)
 
-    def update_db(self):
+    def updateDB(self):
         self.db_manager.updateTrackerValue(self.widget_name, datetime.datetime.now().strftime("%Y-%m-%d"), 
-                                           datetime.datetime.now().strftime("%H:%M"), self.get_value())
+                                           datetime.datetime.now().strftime("%H:%M"), self.getValue())
 
-    def update_value(self, new_value):
+    def updateValue(self, new_value):
         # Update the value in the input field
         self.findChild(QLineEdit).setText(str(new_value))
-        self.update_db()
+        self.updateDB()
 
-    def get_value(self):
+    def getValue(self):
         # Get the current value from the input field
         return self.findChild(QLineEdit).text()
     
-    def set_units(self, new_units):
+    def setUnits(self, new_units):
         # Update the units label
         self.findChild(QLabel, self.units).setText(new_units)
     
-    def increase_value(self):
+    def increaseValue(self):
         # Increase the value by 1
-        current_value = int(self.get_value())
-        self.update_value(current_value + 1)
+        current_value = int(self.getValue())
+        self.updateValue(current_value + 1)
     
-    def decrease_value(self):
+    def decreaseValue(self):
         # Decrease the value by 1
-        current_value = int(self.get_value())
-        self.update_value(current_value - 1)
+        current_value = int(self.getValue())
+        self.updateValue(current_value - 1)
 
-    def validate_input(self):
+    def validateInput(self):
         # Validate that the input is a number
         try:
-            self.update_value(max(0, int(self.get_value())))
+            self.updateValue(max(0, int(self.getValue())))
             return True
         except ValueError:
-            self.update_value(0)
+            self.updateValue(0)
             return False
 
 class TreatmentWidget(QWidget):
-    def __init__(self, treatment_details = {}):
+    def __init__(self, db_manager):
         super().__init__()
-        self.treatment_details = treatment_details
+        self.db_manager = db_manager
+        self.treatment_details = self.db_manager.getTreatmentsByDate(
+            datetime.datetime.now().strftime("%Y-%m-%d"))
         self.initUI()
 
     def initUI(self):
@@ -174,7 +176,7 @@ class MoodWidget(QWidget):
         self.widget_name = "Mood"
         self.db_manager.addWidget(self.widget_name)
         self.initUI()
-        self.set_mood_value(self.db_manager.initMoodValue(self.widget_name, 
+        self.setMoodValue(self.db_manager.initMoodValue(self.widget_name, 
                                                           datetime.datetime.now().strftime("%Y-%m-%d")))
 
     def initUI(self):
@@ -196,7 +198,7 @@ class MoodWidget(QWidget):
         mood_slider.setValue(3)
         mood_slider.setTickPosition(QSlider.TicksBelow)
         mood_slider.setTickInterval(1)
-        mood_slider.valueChanged.connect(self.update_mood_description)
+        mood_slider.valueChanged.connect(self.updateMoodDescription)
         frame_layout.addWidget(mood_slider)
 
         self.mood_desc_label = QLabel('Neutral')
@@ -204,7 +206,7 @@ class MoodWidget(QWidget):
         frame_layout.addWidget(self.mood_desc_label)
 
         submit_mood_button = QPushButton('Submit Mood')
-        submit_mood_button.clicked.connect(self.save_mood)
+        submit_mood_button.clicked.connect(self.saveMood)
         frame_layout.addWidget(submit_mood_button)
 
         mood_frame.setLayout(frame_layout)
@@ -212,7 +214,7 @@ class MoodWidget(QWidget):
         main_layout.addWidget(mood_frame)
         self.setLayout(main_layout)
 
-    def update_mood_description(self):
+    def updateMoodDescription(self):
         # Update the mood description based on the slider value
         descriptions = {
             1: 'Very Bad',
@@ -221,19 +223,19 @@ class MoodWidget(QWidget):
             4: 'Good',
             5: 'Very Good'
         }
-        self.mood_desc_label.setText(descriptions.get(self.get_mood_value(), 'Neutral'))
+        self.mood_desc_label.setText(descriptions.get(self.getMoodValue(), 'Neutral'))
 
-    def get_mood_value(self):
+    def getMoodValue(self):
         # Get the current mood value from the slider
         return self.findChild(QSlider).value()
     
-    def set_mood_value(self, value):
+    def setMoodValue(self, value):
         self.findChild(QSlider).setValue(value)
-        self.update_mood_description()
+        self.updateMoodDescription()
 
-    def save_mood(self):
+    def saveMood(self):
         self.db_manager.addMoodEntry(self.widget_name, datetime.datetime.now().strftime("%Y-%m-%d"), 
-                                     datetime.datetime.now().strftime("%H:%M"), self.get_mood_value())
+                                     datetime.datetime.now().strftime("%H:%M"), self.getMoodValue())
 
 class SymptomsWidget(QWidget):
     def __init__(self, checkin_complete = False, trends_data = {}):
@@ -241,7 +243,6 @@ class SymptomsWidget(QWidget):
         self.checkin_complete = checkin_complete
         self.trends_data = trends_data
         self.initUI()
-
 
     def initUI(self):
         # Set up the symptoms widget UI
@@ -273,5 +274,5 @@ class SymptomsWidget(QWidget):
         main_layout.addWidget(symptoms_frame)
         self.setLayout(main_layout)
 
-    def update_checkin_status(self, value):
+    def updateCheckinStatus(self, value):
         self.checkin_complete = value
