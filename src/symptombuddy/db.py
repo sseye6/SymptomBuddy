@@ -11,6 +11,8 @@ class DatabaseManager():
         self.addNotesTable()
         self.addTrackerTable()
         self.addMoodTable()
+        self.addTreatmentsTable()
+        self.addTreatmentLogTable()
 
     def addWidgetsTable(self):
         # create a table to keep track of active widgets
@@ -255,7 +257,7 @@ class DatabaseManager():
         query = QSqlQuery(db)
         if not query.exec(
             f"""
-            SELECT value FROM mood_logs WHERE date='{date}' ORDER BY time DESC;
+            SELECT value FROM mood_logs WHERE date='{date}'  AND widget_id={widget_id} ORDER BY time DESC;
             """
         ):
             print("Error: Unable to initiate trackers table")
@@ -264,3 +266,135 @@ class DatabaseManager():
             value = query.value(0)
         db.close()
         return value
+    
+    def addTreatmentsTable(self):
+        # create a table for storing treatment information
+        db = QSqlDatabase.database(self.connection_name)
+        query = QSqlQuery(db)
+        if not query.exec(
+            f"""
+            CREATE TABLE IF NOT EXISTS treatments
+            (id INTEGER PRIMARY KEY AUTOINCREMENT UNIQUE NOT NULL, 
+            widget_id INTEGER,
+            name TEXT NOT NULL UNIQUE,
+            time TEXT,
+            dosage INTEGER,
+            units TEXT,
+            start_date TEXT,
+            end_date TEXT,
+            active INTEGER); 
+            """
+        ):
+            print("Error: Unable to initiate treatments table")
+        db.close()
+
+    def addTreatmentLogTable(self):
+        db = QSqlDatabase.database(self.connection_name)
+        query = QSqlQuery(db)
+        if not query.exec(
+            f"""
+            CREATE TABLE IF NOT EXISTS treatment_logs
+            (id INTEGER PRIMARY KEY AUTOINCREMENT UNIQUE NOT NULL, 
+            FOREIGN KEY(treatment_id) REFERENCES treatments(id),
+            date TEXT,
+            time TEXT,
+            complete INTEGER); 
+            """
+        ):
+            print("Error: Unable to initiate treatments table")
+        db.close()
+
+    def findTreatmentIdByName(self, treatment_name):
+        db = QSqlDatabase.database(self.connection_name)
+        query = QSqlQuery(db)
+        if not query.exec(
+            f"""
+            SELECT id FROM treatments WHERE name='{treatment_name}'; 
+            """
+        ):
+            print("Error: Unable to initiate treatments table")
+        val = -1
+        if query.next():
+            val = query.value(0)
+        db.close()
+        return val
+    
+    def addTreatment(self, widget_name, name, time, dosage, units, start_date = None, end_date = None, active = 1):
+        widget_id = self.findWidgetId(widget_name)
+        db = QSqlDatabase.database(self.connection_name)
+        query = QSqlQuery(db)
+        if start_date is None:
+            if not query.exec(
+                f"""
+                INSERT INTO treatments (widget_id, name, time, dosage, units, active)
+                VALUES ({widget_id}, '{name}', '{time}', {dosage}, '{units}', {active});
+                """
+            ):
+                print("Error: Unable to initiate trackers table")
+        elif end_date is None:
+            if not query.exec(
+                f"""
+                INSERT INTO treatments (widget_id, name, time, dosage, units, start_date, active)
+                VALUES ({widget_id}, '{name}', '{time}', {dosage}, '{units}', '{start_date}', {active});
+                """
+            ):
+                print("Error: Unable to initiate trackers table")
+        else:
+            if not query.exec(
+                f"""
+                INSERT INTO treatments (widget_id, name, time, dosage, units, start_date, end_date, active)
+                VALUES ({widget_id}, '{name}', '{time}', {dosage}, '{units}', '{start_date}', '{end_date}', {active});
+                """
+            ):
+                print("Error: Unable to initiate trackers table")
+            
+        db.close()
+
+
+    def addTreatmentEntry(self, treatment_name, date, time, complete = 1):
+        treatment_id = self.findTreatmentIdByName(treatment_name)
+        db = QSqlDatabase.database(self.connection_name)
+        query = QSqlQuery(db)
+        if not query.exec(
+            f"""
+            INSERT INTO treatment_logs (treatment_id, date, time, complete)
+            VALUES ({treatment_id}, '{date}', '{time}', {complete};
+            """
+        ):
+            print("Error: Unable to initiate trackers table")
+
+    def updateTreatmentEntry(self, treatment_name, date, time, complete=1):
+        treatment_id = self.findTreatmentIdByName(treatment_name)
+        db = QSqlDatabase.database(self.connection_name)
+        query = QSqlQuery(db)
+        if not query.exec(
+            f"""
+            UPDATE treatment_logs
+            SET time='{time}', complete='{complete}'
+            WHERE treatment_id='{treatment_id}' AND date='{date}';
+            """
+        ):
+            print("Error: can't update treatment value")
+        db.close()
+
+    def getTreatmentsbyDate(self, date):
+        db = QSqlDatabase.database(self.connection_name)
+        query = QSqlQuery(db)
+        if not query.exec(
+            f"""
+            SELECT name, time, dosage, units, start_date, end_date, active
+            FROM treatments
+            WHERE (start_date IS NULL) OR (start_date >= {date} AND (end_date IS NULL OR end_date <= {date}))
+            ORDER BY time;
+            """
+        ):
+            print("Error: can't update treatment value")
+        
+        name, time, dosage, units, start_date, end_date, active = range(7)
+        treatments = {}
+        while query.next():
+            treatments[query.value(name)] = {'time': query.value(time), 'dosage':query.value(dosage), 
+                                          'units': query.value(units), 'start_date': query.value(start_date), 
+                                          'end_date': query.value(end_date), 'active': query.value(active)}
+        db.close()
+        return treatments
