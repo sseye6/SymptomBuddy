@@ -17,7 +17,7 @@ class Dashboard(QWidget):
 
         # Create layout
         main_layout = QVBoxLayout()
-        
+        secondary_layout = QVBoxLayout()
         frame_layout = QGridLayout()
         frame_layout.setSpacing(10)
 
@@ -27,31 +27,32 @@ class Dashboard(QWidget):
             "Fatigue": f"3% increase"
         }
         symptom_tracker = SymptomsWidget(False, sample_symptom)
-        frame_layout.addWidget(symptom_tracker, 0, 0)
+        secondary_layout.addWidget(symptom_tracker)
 
         water_tracker = TrackerWidget('Water Intake', 'glasses', self.db_manager)
-        frame_layout.addWidget(water_tracker, 1, 0)
+        frame_layout.addWidget(water_tracker, 0, 0)
 
         sleep_tracker = TrackerWidget('Sleep', 'hours', self.db_manager)
-        frame_layout.addWidget(sleep_tracker, 2, 0)
+        frame_layout.addWidget(sleep_tracker, 1, 0)
 
         exercise_tracker = TrackerWidget('Exercise', 'minutes', self.db_manager)
-        frame_layout.addWidget(exercise_tracker, 3, 0)
+        frame_layout.addWidget(exercise_tracker, 2, 0)
 
         notes_widget = NotesWidget(self.db_manager)
-        frame_layout.addWidget(notes_widget, 1, 1)
+        frame_layout.addWidget(notes_widget, 0, 1)
 
         # sample_treatment = {
         #     "Medication A": {"time": "08:00", "dosage": 2, "units": "pills"},
         #     "Medication B": {"time": "12:00", "dosage": 1, "units": "tablet"}
         # }
         treatment_widget = TreatmentWidget(self.db_manager)
-        frame_layout.addWidget(treatment_widget, 2, 1)
+        frame_layout.addWidget(treatment_widget, 1, 1)
 
         mood_widget = MoodWidget(self.db_manager)
-        frame_layout.addWidget(mood_widget, 3, 1)
+        frame_layout.addWidget(mood_widget, 2, 1)
 
-        main_layout.addLayout(frame_layout)
+        secondary_layout.addLayout(frame_layout)
+        main_layout.addLayout(secondary_layout)
 
         edit_dashboard_button = QPushButton('+ Edit Dashboard')
         main_layout.addWidget(edit_dashboard_button)
